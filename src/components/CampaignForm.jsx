@@ -1,3 +1,5 @@
+// src/components/CampaignForm.jsx
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -23,21 +25,29 @@ const CampaignForm = () => {
     setCriteria(newCriteria);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSendCampaign = async () => {
     try {
-      const response = await axios.post('http://localhost:4000/api/v1/send', { criteria, logic, messageTemplate });
+      const response = await axios.post('http://localhost:4000/api/v1/campaign/send-campaign', { criteria, logic, messageTemplate });
       toast.success('Campaign sent successfully');
-      console.log(response.data.messages);
     } catch (error) {
       console.error('Error sending campaign:', error);
       toast.error('Failed to send campaign');
     }
   };
 
+  const handleUpdateMessageStatus = async () => {
+    try {
+      await axios.post('http://localhost:4000/api/v1/campaign/update-message-status');
+      toast.success('Message statuses updated successfully');
+    } catch (error) {
+      console.error('Error updating message status:', error);
+      toast.error('Failed to update message statuses');
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <h2 className="text-2xl font-bold mb-4">Send Campaign</h2>
+    <div className="container mx-auto p-4">
+      <h2 className="text-2xl font-bold mb-4">Create Campaign</h2>
       {criteria.map((criterion, index) => (
         <div key={index} className="flex items-center mb-4">
           <select
@@ -113,16 +123,24 @@ const CampaignForm = () => {
       <textarea
         value={messageTemplate}
         onChange={(e) => setMessageTemplate(e.target.value)}
-        placeholder="Message Template (e.g., Hi [Name], here is 10% off on your next order)"
-        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-4"
+        placeholder="Message Template (use [Name] for personalization)"
+        className="w-full p-2 border border-gray-400 rounded mb-4"
       />
       <button
-        type="submit"
-        className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-4"
+        type="button"
+        onClick={handleSendCampaign}
+        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4"
       >
         Send Campaign
       </button>
-    </form>
+      <button
+        type="button"
+        onClick={handleUpdateMessageStatus}
+        className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+      >
+        Update Message Status
+      </button>
+    </div>
   );
 };
 

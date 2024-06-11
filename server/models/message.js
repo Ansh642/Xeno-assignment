@@ -1,19 +1,18 @@
+// models/message.js
+
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Customer',
+    ref: 'Customer'
   },
-  message: String,
+  content: String,
   status: {
     type: String,
-    default: 'Pending',
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+    enum: ['SENT', 'FAILED'],
+    default: 'SENT'
+  }
 });
 
 const Message = mongoose.model('Message', messageSchema);

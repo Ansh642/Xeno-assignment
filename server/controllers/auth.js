@@ -109,25 +109,16 @@ try {
 exports.sendCampaign = async (req, res) => {
     try {
       const { criteria, logic, messageTemplate } = req.body;
-      const query = criteria.map(criterion => {
-        const { field, operator, value } = criterion;
-        const condition = {};
-        condition[field] = { [`$${operator}`]: value };
-        return condition;
+      const query = buildQuery(criteria, logic);
+      const customers = await customer.find(query);
+  
+      const messages = customers.map(customer => {
+        const content = messageTemplate.replace('[Name]', customer.name);
+        return { customerId: customer._id, content };
       });
-      const mongoQuery = logic === 'AND' ? { $and: query } : { $or: query };
-      const customers = await customer.find(mongoQuery);
   
-      const messages = await Promise.all(customers.map(async customer => {
-        const personalizedMessage = messageTemplate.replace('[Name]', customer.name);
-        const newMessage = new Message({ customerId: customer._id, message: personalizedMessage });
-        await newMessage.save();
-        // Simulate sending message to vendor and updating status
-        await axios.post('http://localhost:4000/api/v1/receipt', { messageId: newMessage._id });
-        return newMessage;
-      }));
-  
-      res.json({ message: 'Campaign sent successfully', messages });
+      const createdMessages = await Message.insertMany(messages);
+      res.json({ message: 'Campaign sent', data: createdMessages });
     } catch (error) {
       console.error('Error sending campaign:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -136,19 +127,18 @@ exports.sendCampaign = async (req, res) => {
   
   exports.updateMessageStatus = async (req, res) => {
     try {
-      const { messageId, status } = req.body;
-      const message = await Message.findById(messageId);
-      if (!message) {
-        return res.status(404).json({ error: 'Message not found' });
-      }
-      message.status = status || 'Delivered';
-      await message.save();
-      res.json({ message: 'Message status updated successfully' });
+      const messages = await Message.find();
+      const updatedMessages = await Promise.all(messages.map(async (message) => {
+        const status = Math.random() < 0.9 ? 'SENT' : 'FAILED';
+        message.status = status;
+        return message.save();
+      }));
+  
+      res.json({ message: 'Messages status updated', data: updatedMessages });
     } catch (error) {
       console.error('Error updating message status:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   };
-
 
   
