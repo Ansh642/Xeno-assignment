@@ -123,9 +123,9 @@ exports.sendCampaign = async (req, res) => {
       console.error('Error sending campaign:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
-  };
+};
   
-  exports.updateMessageStatus = async (req, res) => {
+exports.updateMessageStatus = async (req, res) => {
     try {
       const messages = await Message.find();
       const updatedMessages = await Promise.all(messages.map(async (message) => {
@@ -139,6 +139,6 @@ exports.sendCampaign = async (req, res) => {
       console.error('Error updating message status:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
-  };
+};
 
   

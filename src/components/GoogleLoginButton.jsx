@@ -4,7 +4,7 @@ import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 const GoogleLoginButton = () => {
   const handleLoginSuccess = (response) => {
     console.log('Login Success:', response);
-    // Send the token to the backend to verify and create a session
+    
     fetch('/auth/google/callback', {
       method: 'POST',
       headers: {
@@ -14,7 +14,6 @@ const GoogleLoginButton = () => {
     })
     .then(res => res.json())
     .then(data => {
-      // Handle response data (e.g., redirect to dashboard)
       console.log(data);
     })
     .catch(error => console.error('Error:', error));

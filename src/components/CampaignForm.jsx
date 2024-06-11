@@ -1,5 +1,3 @@
-// src/components/CampaignForm.jsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -27,7 +25,7 @@ const CampaignForm = () => {
 
   const handleSendCampaign = async () => {
     try {
-      const response = await axios.post('http://localhost:4000/api/v1/campaign/send-campaign', { criteria, logic, messageTemplate });
+      const response = await axios.post('http://localhost:4000/api/v1/send-campaign', { criteria, logic, messageTemplate });
       toast.success('Campaign sent successfully');
     } catch (error) {
       console.error('Error sending campaign:', error);
@@ -37,7 +35,7 @@ const CampaignForm = () => {
 
   const handleUpdateMessageStatus = async () => {
     try {
-      await axios.post('http://localhost:4000/api/v1/campaign/update-message-status');
+      await axios.post('http://localhost:4000/api/v1/update-message-status');
       toast.success('Message statuses updated successfully');
     } catch (error) {
       console.error('Error updating message status:', error);
