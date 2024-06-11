@@ -1,6 +1,10 @@
 const customer = require("../models/customer");
 const order = require("../models/order");
 const audience = require("../models/audience");
+const CommunicationsLog = require("../models/communication");
+const Message = require('../models/message');
+const axios = require('axios');
+
 
 exports.insertOrder = async (req, res) => {
     try {
@@ -55,34 +59,96 @@ exports.addCustomer = async (req, res) => {
     }
 };
 
-exports.buildQuery = (criteria, logic) => {
+
+const buildQuery = (criteria, logic) => {
     const query = criteria.map(criterion => {
-        const { field, operator, value } = criterion;
-        return { [field]: { [operator]: value } };
+      const { field, operator, value } = criterion;
+      const condition = {};
+      condition[field] = { [`$${operator}`]: value };
+      return condition;
     });
     return logic === 'AND' ? { $and: query } : { $or: query };
 };
-
+  
 exports.checkAudienceSize = async (req, res) => {
     try {
-        const { criteria, logic } = req.body;
-        const query = exports.buildQuery(criteria, logic); // Use exports to access buildQuery
-        const audienceSize = await customer.countDocuments(query);
-        res.json({ size: audienceSize });
+      const { criteria, logic } = req.body;
+      const query = buildQuery(criteria, logic);
+      const audienceSize = await customer.countDocuments(query);
+      res.json({ size: audienceSize });
     } catch (error) {
-        console.error('Error checking audience size:', error);
-        res.status(500).json({ error: 'Internal server error' });
+      console.error('Error checking audience size:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
 };
-
+  
 exports.saveAudienceCriteria = async (req, res) => {
     try {
-        const { criteria, logic } = req.body;
-        const audienceDetails = new audience({ criteria, logic });
-        await audienceDetails.save();
-        res.json({ message: 'Audience criteria saved successfully' });
+      const { criteria, logic } = req.body;
+      const newLog = new CommunicationsLog({ criteria, logic });
+      await newLog.save();
+      res.json({ message: 'Audience criteria saved successfully' });
     } catch (error) {
-        console.error('Error saving audience criteria:', error);
-        res.status(500).json({ error: 'Internal server error' });
+      console.error('Error saving audience criteria:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
 };
+  
+exports.getPastCampaigns = async (req, res) => {
+try {
+    const campaigns = await CommunicationsLog.find().sort({ createdAt: -1 });
+    res.json(campaigns);
+} catch (error) {
+    console.error('Error fetching past campaigns:', error);
+    res.status(500).json({ error: 'Internal server error' });
+}
+};
+
+
+
+exports.sendCampaign = async (req, res) => {
+    try {
+      const { criteria, logic, messageTemplate } = req.body;
+      const query = criteria.map(criterion => {
+        const { field, operator, value } = criterion;
+        const condition = {};
+        condition[field] = { [`$${operator}`]: value };
+        return condition;
+      });
+      const mongoQuery = logic === 'AND' ? { $and: query } : { $or: query };
+      const customers = await customer.find(mongoQuery);
+  
+      const messages = await Promise.all(customers.map(async customer => {
+        const personalizedMessage = messageTemplate.replace('[Name]', customer.name);
+        const newMessage = new Message({ customerId: customer._id, message: personalizedMessage });
+        await newMessage.save();
+        // Simulate sending message to vendor and updating status
+        await axios.post('http://localhost:4000/api/v1/receipt', { messageId: newMessage._id });
+        return newMessage;
+      }));
+  
+      res.json({ message: 'Campaign sent successfully', messages });
+    } catch (error) {
+      console.error('Error sending campaign:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+  
+  exports.updateMessageStatus = async (req, res) => {
+    try {
+      const { messageId, status } = req.body;
+      const message = await Message.findById(messageId);
+      if (!message) {
+        return res.status(404).json({ error: 'Message not found' });
+      }
+      message.status = status || 'Delivered';
+      await message.save();
+      res.json({ message: 'Message status updated successfully' });
+    } catch (error) {
+      console.error('Error updating message status:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+
+  

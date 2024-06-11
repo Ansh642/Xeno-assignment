@@ -3,18 +3,25 @@ import './App.css';
 import GoogleLoginButton from './components/GoogleLoginButton';
 import AudienceCreationForm from './components/Audience';
 import { Toaster } from 'react-hot-toast';
+import { Route, Routes } from 'react-router-dom';
+import CampaignList from './components/Campaingn';
+import CampaignForm from './components/CampaignForm';
 
 function App() {
   return (
-    <div className="container mx-auto mt-20">
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold">Welcome to My App</h1>
-        <GoogleLoginButton />
+    <>
+    <div className="container mx-auto p-4">
+        <Routes>
+          <Route path="/" element={<AudienceCreationForm />} />
+          <Route path="/campaigns" element={<CampaignList />} />
+          <Route path="/send-campaign" element={<CampaignForm/>} />
+        </Routes>
       </div>
-      <AudienceCreationForm />
+
+      <GoogleLoginButton/>
 
       <Toaster/>
-    </div>
+      </>
   );
 }
 

@@ -1,5 +1,5 @@
 const express = require('express');
-const { insertOrder, addCustomer, checkAudienceSize, saveAudienceCriteria } = require('../controllers/auth');
+const { insertOrder, addCustomer, checkAudienceSize, saveAudienceCriteria, getPastCampaigns, sendCampaign, updateMessageStatus } = require('../controllers/auth');
 const router = express.Router();
 const passport = require('passport');
 
@@ -25,5 +25,8 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
 
 router.post('/check',checkAudienceSize);
 router.post('/save', saveAudienceCriteria);
+router.get('/campaigns', getPastCampaigns);
+router.post('/send', sendCampaign);
+router.post('/receipt', updateMessageStatus);
 
 module.exports = router;
